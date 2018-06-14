@@ -1,0 +1,17 @@
+first:
+  - busybox: |
+      echo ./hello {nevents} {outfile:>>}
+      echo 'fine...'
+  - {nevents: $init|nevents,  outfile: world}
+second:
+  - busybox: echo ./hello {input} {outfile:>>}
+  - {input: $first|outfile,  outfile: what}
+splitOne:
+  - busybox: echo ./hello {input} {splitit:>>}
+  - {input: $second|outfile,  splitit: third}
+splitTwo:
+  - busybox: echo ./hello {input} {another:>>splitit}
+  - {input: $second|outfile,  another: fourth}
+merge:
+  - busybox: echo ./merged {merged} {output:>>}
+  - {merged: '$splitOne,$splitTwo|splitit', output: merged}
