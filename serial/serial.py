@@ -79,6 +79,7 @@ def step(func):
         },
         'environment': {
             'environment_type': 'docker-encapsulated',
+            'image': getattr(cfg,'environment',None)
         },
         'publisher': {
             'publisher_type': 'interpolated-pub',
@@ -102,7 +103,8 @@ def singlestep(step,image,name):
         d['scheduler']['scheduler_type'] = 'singlestep-stage'
         d['scheduler']['parameters'] = {k:v for k,v in s.parameters.items()}
         d['scheduler']['step'] = s.step
-        d['scheduler']['step']['environment']['image'] = image
+        if 'image' in d['scheduler']['step']['environment']:
+            d['scheduler']['step']['environment']['image'] = image
 
         d['dependencies'] = [v['stages'] for k,v in s.parameters.items() if type(v)==dict]
         return d
@@ -122,13 +124,15 @@ import yaml
 @dialect('serial')
 def dagdowndialect(spec,specopts):
     d = yaml.load(open(spec))
-    w = wflow(d['environment'])
-    for x in d['steps']:
+    w = wflow(d.get('environment',None))
+    for i,x in enumerate(d['steps']):
         @step
         def __step(s,pars):
             s.cmd = x['cmd']
+            if 'image' in x:
+                s.image = x['image']
             return {k:eval(v,{}, {'pars': pars}) for k,v in x['output'].items()}
-        @w.singlestep(__step,x['name'])
+        @w.singlestep(__step,x.get('name','step{}'.format(i)))
         def __runstep(s):
             s.parameters(**{k: eval(v) for k,v in x['input'].items()})
     data = json.loads(w.compile())
