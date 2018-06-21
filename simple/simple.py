@@ -121,9 +121,8 @@ def singlestep(step,image,name):
         d['scheduler']['scheduler_type'] = 'singlestep-stage'
         d['scheduler']['parameters'] = {k:v for k,v in s.parameters.items()}
         d['scheduler']['step'] = s.step
-        if 'image' not in d['scheduler']['step']['environment']:
+        if not d['scheduler']['step']['environment']['image']:
             d['scheduler']['step']['environment']['image'] = image
-
         d['dependencies'] = [v['stages'] for k,v in s.parameters.items() if type(v)==dict]
         return d
     return wrapper
