@@ -3,6 +3,7 @@ steps:
 - name: madgraph
   input:  {ufo: scope.init.ufofile, lhefile: workdir.join('out.lhe')}
   output: {lhefile: pars.lhefile}
+  environment: alpine #override
   cmd: |
     echo ./madgraph --ufo {pars.ufo} --lhefile {pars.lhefile}
     touch {pars.lhefile}
