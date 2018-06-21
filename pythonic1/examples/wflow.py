@@ -32,5 +32,5 @@ def runmadgraph(s):
 def runpythia(s):
     s.parameters = dict(
         infile  = scope.runmadgraph.output,
-        outfile = workdir.join('out.lhe'),
+        outfile = workdir.join('out.hepmc'),
     )

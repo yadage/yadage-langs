@@ -1,17 +1,15 @@
-first:
-  - busybox: |
-      echo ./hello {nevents} {outfile:>>}
-      echo 'fine...'
-  - {nevents: $init|nevents,  outfile: world}
-second:
-  - busybox: echo ./hello {input} {outfile:>>}
-  - {input: $first|outfile,  outfile: what}
-splitOne:
-  - busybox: echo ./hello {input} {splitit:>>}
-  - {input: $second|outfile,  splitit: third}
-splitTwo:
-  - busybox: echo ./hello {input} {another:>>splitit}
-  - {input: $second|outfile,  another: fourth}
-merge:
-  - busybox: echo ./merged {merged} {output:>>}
-  - {merged: '$splitOne,$splitTwo|splitit', output: merged}
+a:
+- busybox: echo {n} > {o:>>}
+- {n: $init|n,  o: '{workdir}/o'}
+# b:
+# - busybox: cat {i} >> {o:>>} && echo b >> {o:>>}
+# - {i: $a|o,  o: '{workdir}/o'}
+# c:
+# - busybox: cat {i} >> {o:>>} && echo c >> {o:>>}
+# - {i: $b|o,  o: '{workdir}/o'}
+# d:
+# - busybox: cat {i} >> {o:>>} && echo d >> {o:>>}
+# - {i: $b|o,  o: '{workdir}/o'}
+# e:
+# - busybox: cat {i} > {o:>>}
+# - {i: '$c,$d|o', o: '{workdir}/o'}
