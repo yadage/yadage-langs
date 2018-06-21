@@ -1,0 +1,10 @@
+environment: lukasheinrich/serialexample
+generate:
+  cmd: root -b -q '/code/gendata.C(20000,"{workdir[data.root]}")'
+  output:
+    events: workdir['data.root']
+fit:
+  cmd: root -b -q '/code/fitdata.C("{inp[generate.events]}","{workdir[plot.png]}")'
+  output:
+    events: workdir['plot.png']
+
