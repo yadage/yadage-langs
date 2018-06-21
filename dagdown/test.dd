@@ -1,15 +1,15 @@
 a:
 - busybox: echo {n} > {o:>>}
 - {n: $init|n,  o: '{workdir}/o'}
-# b:
-# - busybox: cat {i} >> {o:>>} && echo b >> {o:>>}
-# - {i: $a|o,  o: '{workdir}/o'}
-# c:
-# - busybox: cat {i} >> {o:>>} && echo c >> {o:>>}
-# - {i: $b|o,  o: '{workdir}/o'}
-# d:
-# - busybox: cat {i} >> {o:>>} && echo d >> {o:>>}
-# - {i: $b|o,  o: '{workdir}/o'}
-# e:
-# - busybox: cat {i} > {o:>>}
-# - {i: '$c,$d|o', o: '{workdir}/o'}
+b:
+- busybox: cat {i} >> {o:>>} && echo b >> {o:>>}
+- {i: $a|o,  o: '{workdir}/o'}
+c:
+- busybox: cat {i} >> {o:>>} && echo c >> {o:>>}
+- {i: $b|o,  o: '{workdir}/o'}
+d:
+- busybox: cat {i} >> {o:>>} && echo d >> {o:>>}
+- {i: $b|o,  o: '{workdir}/o'}
+e:
+- busybox: cat {i} > {o:>>}
+- {i: '$c,$d|o', o: '{workdir}/o'}
