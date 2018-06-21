@@ -88,6 +88,8 @@ def step(func):
     }
 
 class stage(object):
+    def parameters(self, **kwargs):
+        self.parameters = kwargs
     def json(self):
         return {'name': None, 'scheduler': {'scheduler_type': None}}
 
