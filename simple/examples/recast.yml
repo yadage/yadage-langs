@@ -6,7 +6,6 @@ eventselection:
     dxaod_file: http://physics.nyu.edu/~lh1132/capdemo/mc15_13TeV.123456.cap_recast_demo_signal_one.root
     submit: workdir.join('submit')
     lumi: 30
-  output: {signalfile: workdir.join('submit/hist-sample.root')}
   cmd: |
       source /home/atlas/release_setup.sh
       source /analysis/build/x86*/setup.sh
@@ -16,6 +15,8 @@ eventselection:
       EOF
       echo {pars.dxaod_file} > recast_inputs.txt
       myEventSelection {pars.submit} recast_inputs.txt recast_xsecs.txt {pars.lumi}
+  output:
+    signalfile: workdir.join('submit/hist-sample.root')
 statanalysis:
   environment: reanahub/reana-demo-atlas-recast-statanalysis
   input:
@@ -23,11 +24,6 @@ statanalysis:
     data_file: /code/data/data.root
     signal_file: scope.eventselection.signalfile
     resultdir: workdir.join('fitresults')
-  output:
-    pre:    workdir.join('fitresults/pre.png')
-    post:   workdir.join('fitresults/post.png')
-    limit:  workdir.join('fitresults/limit.png')
-    nomsig: workdir.join('fitresults/pre.png')
   cmd: |
       source /home/atlas/release_setup.sh
       python /code/make_ws.py {pars.data_file} {pars.signal_file} {pars.background_file}
@@ -36,3 +32,8 @@ statanalysis:
       python /code/set_limit.py results/meas_combined_meas_model.root \
              {pars.resultdir}/limit.png {pars.resultdir}/limit_data.json \
              {pars.resultdir}/limit_data_nomsignal.json
+  output:
+    pre:    workdir.join('fitresults/pre.png')
+    post:   workdir.join('fitresults/post.png')
+    limit:  workdir.join('fitresults/limit.png')
+    nomsig: workdir.join('fitresults/pre.png')
