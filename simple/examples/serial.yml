@@ -6,5 +6,4 @@ generate:
 fit:
   cmd: root -b -q '/code/fitdata.C("{inp[generate.events]}","{workdir[plot.png]}")'
   output:
-    events: workdir['plot.png']
-
+    plot: workdir['plot.png']
