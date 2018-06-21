@@ -5,9 +5,9 @@ def madgraph(s,pars):
     s.image = 'busybox'
     s.cmd = '''\
 echo 'this is a new yadage language'
-echo ./madgraph {0} {1}
-touch {1}
-'''.format(pars.infile, pars.outfile)
+echo ./madgraph {pars.infile} {pars.outfile}
+touch {pars.outfile}
+'''
     return {'output': pars.outfile}
 
 @step
@@ -15,9 +15,9 @@ def pythia(s,pars):
     s.image = 'busybox'
     s.cmd = '''\
 echo 'this is a new yadage language'
-echo ./madgraph {0} {1}
-touch {1}
-'''.format(pars.infile, pars.outfile)
+echo ./pythia {pars.infile} {pars.outfile}
+touch {pars.outfile}
+'''
     return {'output': pars.outfile}
 
 w = wflow()

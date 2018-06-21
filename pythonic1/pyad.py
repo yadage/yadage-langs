@@ -74,7 +74,7 @@ def step(func):
     return {
         'process': {
             'process_type': 'interpolated-script-cmd',
-            'script': cfg.cmd
+            'script': cfg.cmd.format(pars = pars)
         },
         'environment': {
             'environment_type': 'docker-encapsulated',
