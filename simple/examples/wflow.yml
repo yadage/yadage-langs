@@ -1,0 +1,13 @@
+environment: busybox
+madgraph:
+  input:  {ufo: scope.init.ufofile, lhefile: workdir.join('out.lhe')}
+  output: {lhefile: pars.lhefile}
+  cmd: |
+    echo ./madgraph --ufo {pars.ufo} --lhefile {pars.lhefile}
+    touch {pars.lhefile}
+pythia:
+  input:  {lhefile: scope.madgraph.lhefile, hepmcfile: workdir.join('out.hepmc')}
+  output: {lhefile: pars.hepmcfile}
+  cmd: |
+    echo ./pythia --lhe {pars.lhefile} {pars.hepmcfile}
+    touch {pars.lhefile}
