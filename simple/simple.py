@@ -130,7 +130,7 @@ def eval_better(v,*args,**kwargs):
         return v
 
 
-@dialect('serial')
+@dialect('simple')
 def dagdowndialect(spec,specopts):
     d = yaml.load(open(spec))
     w = wflow(d.pop('environment',None))
@@ -147,3 +147,4 @@ def dagdowndialect(spec,specopts):
     data = json.loads(w.compile())
     extend_with_defaults(data, specopts['schema_name'], specopts['schemadir'])
     return data
+
