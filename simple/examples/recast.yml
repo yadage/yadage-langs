@@ -1,39 +1,26 @@
 eventselection:
   environment: reanahub/reana-demo-atlas-recast-eventselection
-  input:
-    did:  scope.init.did
-    xsec: scope.init.xsec
-    dxaod_file: http://physics.nyu.edu/~lh1132/capdemo/mc15_13TeV.123456.cap_recast_demo_signal_one.root
-    submit: workdir.join('submit')
-    lumi: 30
   cmd: |
-      source /home/atlas/release_setup.sh
-      source /analysis/build/x86*/setup.sh
-      cat << 'EOF' > recast_xsecs.txt
-      id/I:name/C:xsec/F:kfac/F:eff/F:relunc/F
-      {pars.did} name {pars.xsec} 1.0 1.0 1.0
-      EOF
-      echo {pars.dxaod_file} > recast_inputs.txt
-      myEventSelection {pars.submit} recast_inputs.txt recast_xsecs.txt {pars.lumi}
+    source /home/atlas/release_setup.sh
+    source /analysis/build/x86*/setup.sh
+    cat << 'EOF' > recast_xsecs.txt
+    id/I:name/C:xsec/F:kfac/F:eff/F:relunc/F
+    {inp[init.did]} name {inp[init.xsec]} 1.0 1.0 1.0
+    EOF
+    echo {inp[init.url]} > recast_inputs.txt
+    myEventSelection {workdir[submit]} recast_inputs.txt recast_xsecs.txt 30 #(=lumi)
   output:
-    signalfile: workdir.join('submit/hist-sample.root')
+    signalfile: workdir['submit/hist-sample.root']
 statanalysis:
   environment: reanahub/reana-demo-atlas-recast-statanalysis
-  input:
-    background_file: /code/data/background.root
-    data_file: /code/data/data.root
-    signal_file: scope.eventselection.signalfile
-    resultdir: workdir.join('fitresults')
   cmd: |
-      source /home/atlas/release_setup.sh
-      python /code/make_ws.py {pars.data_file} {pars.signal_file} {pars.background_file}
-      mkdir -p {pars.resultdir}
-      python /code/plot.py results/meas_combined_meas_model.root {pars.resultdir}/pre.png {pars.resultdir}/post.png
-      python /code/set_limit.py results/meas_combined_meas_model.root \
-             {pars.resultdir}/limit.png {pars.resultdir}/limit_data.json \
-             {pars.resultdir}/limit_data_nomsignal.json
+    source /home/atlas/release_setup.sh
+    python /code/make_ws.py /code/data/data.root {inp[eventselection.signalfile]} /code/data/background.root
+    resultdir={workdir[fitresults]}
+    mkdir -p $resultdir
+    python /code/plot.py /code/results/meas_combined_meas_model.root $resultdir/pre.png $resultdir/post.png
+    python /code/set_limit.py results/meas_combined_meas_model.root \
+           $resultdir/limit.png $result/limit_data.json \
+           $resultdir/limit_data_nomsignal.json
   output:
-    pre:    workdir.join('fitresults/pre.png')
-    post:   workdir.join('fitresults/post.png')
-    limit:  workdir.join('fitresults/limit.png')
-    nomsig: workdir.join('fitresults/pre.png')
+    limit:  workdir['fitresults/limit_data.json']
