@@ -1,9 +1,16 @@
-environment: to/be:termined
+environment: hepstore/sherpaflavon
 generate:
-  cmd: ./generate.py {inp[init.vphi]} {inp[init.eps]} {inp[init.g]} {inp[init.minusg2]} {inp[init.epsphi_mag]} {inp[init.epsphi_phase]} {workdir[out.yoda]}
+  cmd: |
+    python3 ./preparez3breaking.py templates/Runz3breaking.dat recast.dat   \
+      {inp[init.vphi]} {inp[init.eps]} {inp[init.g]} {inp[init.minusg2]} \
+      {inp[init.epsphi_mag]} {inp[init.epsphi_phase]}
+    cat recast.dat
+    echo ---------------------------------------------------
+    sh run.sh -f recast.dat MI_HANDLER=0 -e {inp[init.nevents]}
+    mv Rivet.yoda {workdir[out.yoda]}
   output:
-    yodafile: work['out.yoda']
-output:
-  cmd: ./runpyhf.py {inp[generate.yodafile]} {workdir[clsdata.json]}
-  output:
-    plot: workdir['clsdata.json']
+    yodafile: workdir['out.yoda']
+# output:
+#   cmd: ./runpyhf.py {inp[generate.yodafile]} {workdir[clsdata.json]}
+#   output:
+#     plot: workdir['clsdata.json']
