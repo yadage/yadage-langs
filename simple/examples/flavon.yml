@@ -1,0 +1,9 @@
+environment: to/be:termined
+generate:
+  cmd: ./generate.py {inp[init.vphi]} {inp[init.eps]} {inp[init.g]} {inp[init.minusg2]} {inp[init.epsphi_mag]} {inp[init.epsphi_phase]} {workdir[out.yoda]}
+  output:
+    yodafile: work['out.yoda']
+output:
+  cmd: ./runpyhf.py {inp[generate.yodafile]} {workdir[clsdata.json]}
+  output:
+    plot: workdir['clsdata.json']
