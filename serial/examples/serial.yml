@@ -1,0 +1,4 @@
+environment: busybox
+commands:
+- echo hello > data.root
+- cat data.root > plot.png

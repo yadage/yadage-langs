@@ -26,6 +26,8 @@ class dag():
         return selection(pointer(expr))
 
 class state():
+    def __getitem__(self,key):
+        return self.join(key)
     def join(self,path):
         return '/'.join(['{workdir}',path])
 
@@ -49,9 +51,9 @@ class wflow(object):
     def compile(self):
         return json.dumps({'stages': [s for s in self.stages]})
 
-    def singlestep(self,step,name):
+    def singlestep(self,step,name,dependencies):
         def wrapper(func):
-            return self.stages.append(singlestep(step,self.image,name)(func))
+            return self.stages.append(singlestep(step,self.image,name,dependencies)(func))
         return wrapper
 
 class scoper(object):
@@ -75,17 +77,34 @@ def step(func):
     return {
         'process': {
             'process_type': 'interpolated-script-cmd',
-            'script': cfg.cmd.format(pars = pars)
+            'script': cfg.cmd.format(inp = cfg.inp, workdir = cfg.wrk)
         },
         'environment': {
             'environment_type': 'docker-encapsulated',
-            'image': getattr(cfg,'image',None)
+            'image': getattr(cfg,'image',None),
+            'workdir': '{workdir}'
         },
         'publisher': {
-            'publisher_type': 'interpolated-pub',
-            'publish': pub
+            'publisher_type': 'constant-pub',
+            'publish': {'dummy':'value'}
         }
     }
+
+class worktracker(object):
+    def __init__(self,work):
+        self.workdir = work
+        self.tracked = []
+    def __getitem__(self,key):
+        self.tracked.append(self.workdir.join(key))
+        return '{{wrk{}}}'.format(len(self.tracked)-1)
+
+class inputtracker(object):
+    def __init__(self,scope):
+        self.scope = scope
+        self.tracked = []
+    def __getitem__(self,key):
+        self.tracked.append(eval('self.scope.{}'.format(key)))
+        return '{{arg{}}}'.format(len(self.tracked)-1)
 
 class stage(object):
     def parameters(self, **kwargs):
@@ -93,7 +112,7 @@ class stage(object):
     def json(self):
         return {'name': None, 'scheduler': {'scheduler_type': None}}
 
-def singlestep(step,image,name):
+def singlestep(step,image,name,dependencies = None):
     def wrapper(func):
         s = stage()
         s.step = step
@@ -101,20 +120,19 @@ def singlestep(step,image,name):
         d = s.json()
         d['name'] = name
         d['scheduler']['scheduler_type'] = 'singlestep-stage'
-        d['scheduler']['parameters'] = {k:v for k,v in s.parameters.items()}
+        d['scheduler']['parameters'] = {}
+        if dependencies:
+            d['scheduler']['parameters']['link'] = {'stages': dependencies[0], 'output': 'dummy'}
         d['scheduler']['step'] = s.step
-        if 'image' not in d['scheduler']['step']['environment']:
+        if not d['scheduler']['step']['environment']['image']:
             d['scheduler']['step']['environment']['image'] = image
-
-        d['dependencies'] = [v['stages'] for k,v in s.parameters.items() if type(v)==dict]
+        d['dependencies'] = dependencies or []
         return d
     return wrapper
 
 #--------------------------------
 
 workdir, scope = maker()
-
-
 from yadageschemas.dialects import dialect
 from yadageschemas.dialects.raw_with_defaults import extend_with_defaults
 import importlib
@@ -134,16 +152,25 @@ def eval_better(v,*args,**kwargs):
 def dagdowndialect(spec,specopts):
     d = yaml.load(open(spec))
     w = wflow(d.pop('environment',None))
-    for k,x in d.items():
+    for i,x in enumerate(d['commands']):
+        tracker  = inputtracker(scope)
+        wrktrack = worktracker(workdir)
         @step
         def __step(s,pars):
-            s.cmd = x['cmd']
+            s.cmd = x
+            s.inp = tracker
+            s.wrk = wrktrack
             if 'environment' in x:
                 s.image = x['environment']
-            return {k:eval_better(v,{}, {'pars': pars,'workdir': workdir}) for k,v in x['output'].items()}
-        @w.singlestep(__step,k)
+            return None
+        @w.singlestep(__step,'step{}'.format(i),['step{}'.format(i-1)] if i > 0 else None)
         def __runstep(s):
-            s.parameters(**{k: eval_better(v) for k,v in x['input'].items()})
+            pars = {}
+            for i,t in enumerate(tracker.tracked):
+                pars['arg{}'.format(i)] = t
+            for i,t in enumerate(wrktrack.tracked):
+                pars['wrk{}'.format(i)] = t
+            s.parameters(**pars)
     data = json.loads(w.compile())
     extend_with_defaults(data, specopts['schema_name'], specopts['schemadir'])
     return data
